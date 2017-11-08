@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall
+CXXFLAGS = -O2 -Wall
 
 SRCDIR = .
 #LDFLAGS = -lglut -lGLU -lGL -lm
@@ -8,12 +8,12 @@ LDFLAGS = -lglfw3 -lGLEW -lXinerama -lXcursor -lrt `pkg-config --static --libs x
 SOURCES = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
 
 #OBJS = $(SOURCES:%.c=%.o)
-OBJS = hello_glfw.o glsl.o Sprite2D.o
+OBJS = main.o glsl.o Sprite2D.o
 
 TARGET = hoge
 
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) $(LDFLAGS) -o $@
+	$(CC) $(CXXFLAGS) $(OBJS) $(LDFLAGS) -o $@
 
 
 all: clean $(TARGET)

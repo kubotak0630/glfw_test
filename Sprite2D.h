@@ -3,17 +3,18 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+
+
 class Sprite2D
 {
 
  private:
 
     GLuint _program_id;
-    GLuint _vbo_buf[3];  //vertex, color, uv
+    GLuint _vbo_buf;  //vertex, color, uv
 
 
 
-    float _uv[8];
     GLuint _texture_id;    //set value at setTexuter() function
     bool _texture_enable;  //set true at setTexuter() function
 
@@ -28,9 +29,15 @@ class Sprite2D
     void mat4_mul(float* a, float* b, float* ans);
     int forcePow2(int a);
 
+    //Set Matrix at Direct 
+    void setTransMat(float* mat);
+    void setRotateMat(float* mat);
+    void setScaleMat(float* mat);
+
+
  public:
 
-    Sprite2D(GLuint program_id, float* vertex, float* color = NULL);
+    Sprite2D(GLuint program_id, float* vertex, float* color = NULL, float* uv = NULL);
     ~Sprite2D();
     
     void draw();
@@ -49,12 +56,6 @@ class Sprite2D
     void setTransVal(int x, int y);  // set pixel
     void setRotateVal(double degree_val, float pivot_x, float pivot_y);  //0 <= degree_val <= 360
     void setScaleVal(int scale_x, int scale_y);
-
-    //Set Matrix at Direct 
-    void setTransMat(float* mat);
-    void setRotateMat(float* mat);
-    void setScaleMat(float* mat);
-
 
 };
 

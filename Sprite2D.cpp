@@ -3,12 +3,18 @@
 #include <math.h>
 #include "Sprite2D.h"
 
-Sprite2D::Sprite2D(GLuint program_id, float* vertex, float* color)
+#define BUFFER_OFFSET(offset) ((GLvoid *)(offset))
+
+const int VBO_COLOR_OFFSET = sizeof(float)*8;
+const int VBO_UV_OFFSET = sizeof(float)*(8+16);
+
+Sprite2D::Sprite2D(GLuint program_id, float* vertex, float* color, float* uv)
     :_program_id(program_id),
      _texture_enable(false)
 {
 
-    glGenBuffers(3, _vbo_buf);  //vertex, color, uv
+
+    glGenBuffers(1, &_vbo_buf);
 
 
     //Init Matrix
@@ -21,22 +27,33 @@ Sprite2D::Sprite2D(GLuint program_id, float* vertex, float* color)
     _pivot[0] = 0.0f;
     _pivot[1] = 0.0f;
 
-    //set Vertex to VBO
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*8, vertex, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);  //unbind VBO
+    //alloc VBO
+    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(8+16+8), NULL, GL_STATIC_DRAW);
+
+    //set Vertex to VBO    
+    if (vertex != NULL) {
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*8, vertex);
+    }
 
     //set Color to VBO
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*16, color, GL_STATIC_DRAW);
+    if (color != NULL) {
+        glBufferSubData(GL_ARRAY_BUFFER, VBO_COLOR_OFFSET, sizeof(float)*16, color);
+    }
+
+    //set UV
+    if (uv != NULL) {
+        glBufferSubData(GL_ARRAY_BUFFER, VBO_UV_OFFSET, sizeof(float)*8, uv);
+    }
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);  //unbind VBO
-    
+
 }
 
 Sprite2D::~Sprite2D()
 {
 
-    glDeleteBuffers(3, _vbo_buf);
+    glDeleteBuffers(1, &_vbo_buf);
 
     if (_texture_enable) {
         glDeleteTextures(1, &_texture_id);
@@ -69,11 +86,10 @@ void Sprite2D::initMatIdent(float* mat)
 
 void Sprite2D::setVertex(float* vertex)
 {
- 
 
-    //set Vertex to VBO
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*8, vertex, GL_STATIC_DRAW);
+    //Update Vertex to VBO 
+    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*8, vertex);
     glBindBuffer(GL_ARRAY_BUFFER, 0);  //unbind VBO
 
 }
@@ -81,20 +97,21 @@ void Sprite2D::setVertex(float* vertex)
 void Sprite2D::setColor(float* color)
 {
 
-    //set Color to VBO
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*16, color, GL_STATIC_DRAW);
+    //Update Color to VBO
+    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf);
+    glBufferSubData(GL_ARRAY_BUFFER, VBO_COLOR_OFFSET, sizeof(float)*16, color);
     glBindBuffer(GL_ARRAY_BUFFER, 0);  //unbind VBO
-
 
 }
 
 void Sprite2D::setTexUV(float* uv)
 {
 
-    for (int i = 0; i < 8; i++) {
-        _uv[i] = uv[i];
-    }    
+    //Update UV to VBO
+    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf);
+    glBufferSubData(GL_ARRAY_BUFFER, VBO_UV_OFFSET, sizeof(float)*8, uv);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);  //unbind VBO
+
 }
 
 
@@ -253,7 +270,6 @@ void Sprite2D::updateTexture(unsigned char* img, int size_x, int size_y)
 
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size_x, size_y, GL_RGBA, GL_UNSIGNED_BYTE, img);
 
-
 }
 
 void Sprite2D::draw()
@@ -278,34 +294,27 @@ void Sprite2D::draw()
     glUniform2fv(pivotLoc, 1, _pivot);
     glUniformMatrix4fv(wldMatLoc, 1, GL_FALSE, wld_mat);
 
-    /* １つ目のバッファオブジェクトに頂点データ配列を転送する */    
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf[0]);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(_vertex), _vertex, GL_STATIC_DRAW);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf);
+
+    /* バッファオブジェクトに頂点データ配列を指定 */    
     glEnableVertexAttribArray(positionLoc);
     glVertexAttribPointer(positionLoc, 2, GL_FLOAT, false, 0, NULL);
-    
-    //glEnableVertexAttribArray(positionLoc);
 
-    /* 2つ目のバッファオブジェクトに頂点colorを転送する */
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf[1]);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(_color), _color, GL_STATIC_DRAW);
 
+    /* バッファオブジェクトに頂点colorを指定 */
     glEnableVertexAttribArray(colorLoc);
-    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, false, 0, NULL);
+    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, false, 0, BUFFER_OFFSET(VBO_COLOR_OFFSET));
 
-
+    
     glUniform1i(glGetUniformLocation(_program_id, "use_tex_flg"), _texture_enable);
 
     if (_texture_enable) {
 
-
-        /* 3つ目のバッファオブジェクトにtexture_uv データ配列を転送する */
-        glBindBuffer(GL_ARRAY_BUFFER, _vbo_buf[2]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(_uv), _uv, GL_STATIC_DRAW);
-
+        /* バッファオブジェクトにtexture_uv を指定 */
         glEnableVertexAttribArray(uvLoc);
-        glVertexAttribPointer(uvLoc, 2, GL_FLOAT, false, 0, NULL);
-
+        glVertexAttribPointer(uvLoc, 2, GL_FLOAT, false, 0, BUFFER_OFFSET(VBO_UV_OFFSET));
 
         //change Textue
 
@@ -314,6 +323,7 @@ void Sprite2D::draw()
         //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // 拡大時近傍
         //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // 縮小時近傍
     }
+
 
 
     glDrawArrays(GL_QUADS, 0, 4);

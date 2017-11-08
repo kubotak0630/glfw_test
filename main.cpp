@@ -208,6 +208,25 @@ void change_bg_bmp(unsigned char* img)
 
 }
 
+void move_rect(float* rect)
+{
+    
+    static int cnt = 0;
+
+    int dx = 2;
+    
+
+    for (int i = 0; i < 8; i++) {
+
+        if (i % 2 == 0) {
+            rect[i] = (float)((int)(rect[i] + dx) % 640);
+        }
+    }
+
+    cnt++;
+
+}
+
 void display(GLFWwindow *window)
 {
 
@@ -309,6 +328,16 @@ void display(GLFWwindow *window)
 
   
     /*** 2nd(rect) *******/
+    static float vtx_rect[] = {
+        100.0f, 50.0f,
+        200.0f, 50.0f,
+        200.0f, 100.0f,
+        100.0f, 100.0f
+    };
+
+    move_rect(vtx_rect);
+    
+    sprite_rect->setVertex(vtx_rect);
     sprite_rect->draw();
 
     /********* chara2(woman) ********************/
@@ -330,6 +359,7 @@ void display(GLFWwindow *window)
 
     g_cnt++;
 }
+
 
 
 int main()
@@ -370,6 +400,14 @@ int main()
     init_glsl();
 
 
+    GLfloat vtx_1[] = {
+        100.0f, 50.0f,
+        200.0f, 50.0f,
+        200.0f, 100.0f,
+        100.0f, 100.0f
+    };
+
+
     float vtx[] = {
         0.0f, 0.0f,
         0.0f, 480.0f,
@@ -384,13 +422,7 @@ int main()
         0.0f, 32.0f
     };
 
-    GLfloat vtx_1[] = {
-        100.0f, 50.0f,
-        200.0f, 50.0f,
-        200.0f, 100.0f,
-        100.0f, 100.0f
-    };
-
+    
    sprite_bg = new Sprite2D(programId, vtx);
 
    GLfloat color_1[] = {
