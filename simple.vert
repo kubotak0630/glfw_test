@@ -13,7 +13,7 @@ uniform vec2 pivot;
 uniform mat4 prj_mat;
 uniform mat4 wld_mat;
 
-varying vec2 v_uv;
+varying vec2 v_texCoord;
 varying vec4 v_color;
 
 void main(void)
@@ -34,6 +34,6 @@ void main(void)
   //gl_Position = prj_mat * wld_mat * vec4(position, 1.0, 1.0);
   //gl_Position = prj_mat * vec4(position, 1.0);
   //gl_Position = vec4(position, 1.0);
-  v_uv = uv;
+  v_texCoord = uv;
   v_color = color;
 }

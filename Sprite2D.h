@@ -40,7 +40,7 @@ class Sprite2D
     Sprite2D(GLuint program_id, float* vertex, float* color = NULL, float* uv = NULL);
     ~Sprite2D();
     
-    void draw();
+    void draw(bool is_blend = true);
 
 
 

@@ -246,7 +246,7 @@ void Sprite2D::setTexture(unsigned char* img, int width_powOf2, int height_powOf
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // 拡大時近傍
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // 縮小時近傍
 
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
     glEnable(GL_BLEND);
     //glBlendFunc(GL_SRC_ALPHA , GL_ONE);
@@ -272,7 +272,7 @@ void Sprite2D::updateTexture(unsigned char* img, int size_x, int size_y)
 
 }
 
-void Sprite2D::draw()
+void Sprite2D::draw(bool is_blend)
 {
 
     //get AttribLocation
@@ -320,11 +320,22 @@ void Sprite2D::draw()
 
         glBindTexture(GL_TEXTURE_2D , _texture_id);
 
-        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // 拡大時近傍
-        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // 縮小時近傍
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // 拡大時近傍
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // 縮小時近傍
     }
 
 
+
+    glEnable(GL_BLEND);
+
+    if (is_blend) {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+    else {
+        glBlendFunc(GL_ONE, GL_ZERO);
+
+    }
+    
 
     glDrawArrays(GL_QUADS, 0, 4);
 

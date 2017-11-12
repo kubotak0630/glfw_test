@@ -276,7 +276,7 @@ void display(GLFWwindow *window)
     change_bg_bmp(tex2);
     sprite_bg->updateTexture(tex2, 4, 4);
 
-    sprite_bg->draw();
+    sprite_bg->draw(false);
 
 
 
@@ -323,7 +323,7 @@ void display(GLFWwindow *window)
     sprite_chara1->setScaleVal(1.0, 1.0);
 
 
-    sprite_chara1->draw();
+    sprite_chara1->draw(true);
 
 
   
@@ -338,7 +338,7 @@ void display(GLFWwindow *window)
     move_rect(vtx_rect);
     
     sprite_rect->setVertex(vtx_rect);
-    sprite_rect->draw();
+    sprite_rect->draw(false);
 
     /********* chara2(woman) ********************/
 
@@ -354,7 +354,7 @@ void display(GLFWwindow *window)
     sprite_chara2->setTransVal(300, 200);
     sprite_chara2->setScaleVal(2.0f, 2.0f);
     sprite_chara2->setRotateVal(30, 16, 16);
-    sprite_chara2->draw();
+    sprite_chara2->draw(true);
     
 
     g_cnt++;
@@ -426,10 +426,10 @@ int main()
    sprite_bg = new Sprite2D(programId, vtx);
 
    GLfloat color_1[] = {
-        1.0f, 0.0f, 0.0f, 1.0f,  //R,  R,G,B,A
-        1.0f, 0.0f, 0.0f, 1.0f,  //R
-        0.0f, 1.0f, 0.0f, 1.0f,  //G
-        0.0f, 0.0f, 1.0f, 1.0f   //B
+        1.0f, 0.0f, 0.0f, 0.5f,  //R,  R,G,B,A
+        1.0f, 0.0f, 0.0f, 0.5f,  //R
+        0.0f, 1.0f, 0.0f, 0.5f,  //G
+        0.0f, 0.0f, 1.0f, 0.5f   //B
     };
 
    sprite_rect = new Sprite2D(programId, vtx_1, color_1);
