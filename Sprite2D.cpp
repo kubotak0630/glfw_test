@@ -10,7 +10,10 @@ const int VBO_UV_OFFSET = sizeof(float)*(8+16);
 
 Sprite2D::Sprite2D(GLuint program_id, float* vertex, float* color, float* uv)
     :_program_id(program_id),
-     _texture_enable(false)
+     _texture_enable(false),
+     _y_gain(1.0),
+     _cb_gain(1.0),
+     _cr_gain(1.0)
 {
 
 
@@ -144,7 +147,7 @@ int Sprite2D::forcePow2(int a)
 }
 
 //read bitmap
-void Sprite2D::setTextureFromFile(const char* fname)
+void Sprite2D::setTextureFromFile(const char* fname, bool is_nearestInterpol)
 {
 
     FILE* fp = fopen(fname, "rb");
@@ -217,7 +220,7 @@ void Sprite2D::setTextureFromFile(const char* fname)
     delete[] pBufByte;
 
 
-    setTexture((uint8_t*)pData, width_pow2, height_pow2);
+    setTexture((uint8_t*)pData, width_pow2, height_pow2, is_nearestInterpol);
 
 
     delete[] pData;
@@ -230,7 +233,7 @@ void Sprite2D::setTextureFromFile(const char* fname)
 }
 
 //only support RGBA, size_x, size_y is power of 2.
-void Sprite2D::setTexture(unsigned char* img, int width_powOf2, int height_powOf2)
+void Sprite2D::setTexture(unsigned char* img, int width_powOf2, int height_powOf2, bool is_nearestInterpol)
 {
 
     glGenTextures(1, &_texture_id);
@@ -242,16 +245,21 @@ void Sprite2D::setTexture(unsigned char* img, int width_powOf2, int height_powOf
 
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_powOf2, height_powOf2, 0, GL_RGBA, GL_UNSIGNED_BYTE, img);
+    
+    if (is_nearestInterpol) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
+    else {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // 拡大時近傍
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // 縮小時近傍
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
     glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA , GL_ONE);
-    //glBlendFunc(GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     _texture_enable = true;
 
@@ -272,7 +280,7 @@ void Sprite2D::updateTexture(unsigned char* img, int size_x, int size_y)
 
 }
 
-void Sprite2D::draw(bool is_blend)
+void Sprite2D::draw(bool blend_enable, bool gain_enable)
 {
 
     //get AttribLocation
@@ -283,6 +291,11 @@ void Sprite2D::draw(bool is_blend)
     //get UniformLocation
     GLuint wldMatLoc = glGetUniformLocation(_program_id, "wld_mat");
     GLuint pivotLoc = glGetUniformLocation(_program_id, "pivot");   
+    GLuint colorCorretLoc = glGetUniformLocation(_program_id, "colorCorrect_flg");   
+    GLuint y_gainLoc = glGetUniformLocation(_program_id, "y_gain");   
+    GLuint cb_gainLoc = glGetUniformLocation(_program_id, "cb_gain");   
+    GLuint cr_gainLoc = glGetUniformLocation(_program_id, "cr_gain");   
+
 
 
     float wld_mat[16];
@@ -293,6 +306,16 @@ void Sprite2D::draw(bool is_blend)
 
     glUniform2fv(pivotLoc, 1, _pivot);
     glUniformMatrix4fv(wldMatLoc, 1, GL_FALSE, wld_mat);
+
+    if (gain_enable) {
+        glUniform1f(y_gainLoc, _y_gain);
+        glUniform1f(cb_gainLoc, _cb_gain);
+        glUniform1f(cr_gainLoc, _cr_gain);
+        glUniform1i(colorCorretLoc, 1);
+    }
+    else {
+        glUniform1i(colorCorretLoc, 0);
+    }
 
 
 
@@ -308,7 +331,7 @@ void Sprite2D::draw(bool is_blend)
     glVertexAttribPointer(colorLoc, 4, GL_FLOAT, false, 0, BUFFER_OFFSET(VBO_COLOR_OFFSET));
 
     
-    glUniform1i(glGetUniformLocation(_program_id, "use_tex_flg"), _texture_enable);
+    glUniform1i(glGetUniformLocation(_program_id, "useTexture_flg"), _texture_enable);
 
     if (_texture_enable) {
 
@@ -317,18 +340,15 @@ void Sprite2D::draw(bool is_blend)
         glVertexAttribPointer(uvLoc, 2, GL_FLOAT, false, 0, BUFFER_OFFSET(VBO_UV_OFFSET));
 
         //change Textue
-
         glBindTexture(GL_TEXTURE_2D , _texture_id);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // 拡大時近傍
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // 縮小時近傍
     }
 
 
 
     glEnable(GL_BLEND);
 
-    if (is_blend) {
+    if (blend_enable) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
     else {
@@ -459,4 +479,11 @@ void Sprite2D::setRotateVal(double degree_val, float pivot_x, float pivot_y)
     _rotate_mat[13] = 0.0f;
     _rotate_mat[14] = 0.0f;
     _rotate_mat[15] = 1.0f;
+}
+
+void Sprite2D::set_gain(float y_gain, float cb_gain, float cr_gain)
+{
+    _y_gain = y_gain;
+    _cb_gain = cb_gain;
+    _cr_gain = cr_gain;
 }

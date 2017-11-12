@@ -24,6 +24,10 @@ class Sprite2D
     float _rotate_mat[16];
     float _scale_mat[16];
 
+    float _y_gain;
+    float _cb_gain;
+    float _cr_gain;
+
     void initMatIdent(float* mat);
 
     void mat4_mul(float* a, float* b, float* ans);
@@ -40,13 +44,14 @@ class Sprite2D
     Sprite2D(GLuint program_id, float* vertex, float* color = NULL, float* uv = NULL);
     ~Sprite2D();
     
-    void draw(bool is_blend = true);
+    void set_gain(float y_gain, float cb_gain, float cr_gain);
+    void draw(bool blend_enable = true, bool gain_enable = false);
 
 
 
     void setVertex(float* vertex);
-    void setTexture(unsigned char* img, int width_powOf2, int height_powOf2);
-    void setTextureFromFile(const char* fname);
+    void setTexture(unsigned char* img, int width_powOf2, int height_powOf2, bool is_nearestInterpol = true);
+    void setTextureFromFile(const char* fname, bool is_nearestInterpol = true);
     void setTexUV(float* uv);
     void updateTexture(unsigned char* img, int size_x, int size_y); // size_x, size_y is ok at not power of 2
 

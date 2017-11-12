@@ -130,7 +130,7 @@ void init_glsl(void)
     glUniform1i(glGetUniformLocation(programId, "texture0"), 0);//テクスチャユニット0とする
 
     //glUniform1i(glGetUniformLocation(programId, "hogehoge"), 10);  //set hogehoge = 10
-    glUniform1iv(glGetUniformLocation(programId, "hoge_ary"), 10, g_hoge);  //set hogehoge = 10
+    //glUniform1iv(glGetUniformLocation(programId, "hoge_ary"), 10, g_hoge);  //set hogehoge = 10
 
 
 
@@ -276,7 +276,8 @@ void display(GLFWwindow *window)
     change_bg_bmp(tex2);
     sprite_bg->updateTexture(tex2, 4, 4);
 
-    sprite_bg->draw(false);
+    sprite_bg->set_gain(1.0, 1.0 , 1.0);
+    sprite_bg->draw(false, true);
 
 
 
@@ -423,25 +424,25 @@ int main()
     };
 
     
-   sprite_bg = new Sprite2D(programId, vtx);
+    sprite_bg = new Sprite2D(programId, vtx);
 
-   GLfloat color_1[] = {
+    GLfloat color_1[] = {
         1.0f, 0.0f, 0.0f, 0.5f,  //R,  R,G,B,A
         1.0f, 0.0f, 0.0f, 0.5f,  //R
         0.0f, 1.0f, 0.0f, 0.5f,  //G
         0.0f, 0.0f, 1.0f, 0.5f   //B
     };
 
-   sprite_rect = new Sprite2D(programId, vtx_1, color_1);
-   sprite_chara1 = new Sprite2D(programId, vtx_chara);
-   sprite_chara2 = new Sprite2D(programId, vtx_chara);
+    sprite_rect = new Sprite2D(programId, vtx_1, color_1);
+    sprite_chara1 = new Sprite2D(programId, vtx_chara);
+    sprite_chara2 = new Sprite2D(programId, vtx_chara);
    
     
     /*** Create Texture **************************/
 
     sprite_bg->setTexture(tex2, 4, 4);
     sprite_chara1->setTextureFromFile("515-sample01.bmp");
-    sprite_chara2->setTextureFromFile("515-sample11.bmp");
+    sprite_chara2->setTextureFromFile("515-sample11.bmp", false);
 
 
 
